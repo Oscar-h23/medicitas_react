@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
+import { pacienteService } from '../services/api';
 
 function PacienteLayout() {
   const location = useLocation();
@@ -11,17 +12,21 @@ function PacienteLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    const userData = localStorage.getItem('userData');
+  cargarUsuario();
+}, []);
 
-    if (userData) {
-      try {
-        const parsed = JSON.parse(userData);
-        setUserName(`${parsed.nombres} ${parsed.apellidos}`);
-      } catch {
-        setUserName('Paciente');
-      }
-    }
-  }, []);
+const cargarUsuario = async () => {
+  try {
+    const perfil = await pacienteService.getPerfil();
+
+    setUserName(
+      `${perfil.nombres} ${perfil.apellidos}`.trim()
+    );
+  } catch (error) {
+    console.error('Error cargando usuario:', error);
+    setUserName('Paciente');
+  }
+};
 
   const menuItems = [
     {
@@ -56,10 +61,17 @@ function PacienteLayout() {
     return current ? current.label : 'Mi Área de Salud';
   };
 
-  const cerrarSesion = () => {
-    localStorage.clear();
+  const cerrarSesion = async () => {
+  try {
+    await pacienteService.logout();
+  } catch (error) {
+    console.error(error);
+  } finally {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userData');
     navigate('/login');
-  };
+  }
+};
 
   return (
     <div className="d-flex" style={{ minHeight: '100vh' }}>

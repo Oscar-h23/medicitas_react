@@ -38,50 +38,50 @@ function PacienteDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userData = localStorage.getItem('userData');
-    if (userData) {
-      const parsed = JSON.parse(userData);
-      setUserName(`${parsed.nombres} ${parsed.apellidos}`);
-    }
-    cargarDatos();
-  }, []);
+  cargarDatos();
+}, []);
 
   const cargarDatos = async () => {
-    try {
-      // Cargar en paralelo dashboard y citas
-      const [dashData, citas] = await Promise.all([
-        pacienteService.getDashboardData(),
-        pacienteService.getMisCitas(),
-      ]);
+  try {
+    const [perfil, dashData, citas] = await Promise.all([
+      pacienteService.getPerfil(),
+      pacienteService.getDashboardData(),
+      pacienteService.getMisCitas(),
+    ]);
 
-      // El backend no enriquece proximaCita con doctorNombre,
-      // pero sí lo retorna en la lista de citas (citasEnriquecidas).
-      // Cruzamos el doctorNombre desde la lista de citas.
-      if (dashData.proximaCita) {
-        const citaCompleta = citas.find(
-          (c: any) => c.id === dashData.proximaCita.id
-        );
-        if (citaCompleta) {
-          dashData.proximaCita.doctorNombre = citaCompleta.doctorNombre;
-        }
+    setUserName(
+      `${perfil.nombres} ${perfil.apellidos}`.trim()
+    );
+
+    if (dashData.proximaCita) {
+      const citaCompleta = citas.find(
+        (c: any) => c.id === dashData.proximaCita.id
+      );
+
+      if (citaCompleta) {
+        dashData.proximaCita.doctorNombre =
+          citaCompleta.doctorNombre;
       }
-      
-
-      setDashboardData(dashData);
-
-      // Últimas 5 citas, ordenadas de más reciente a más antigua
-      const recientes = [...citas]
-        .sort((a: Cita, b: Cita) =>
-          `${b.fecha} ${b.horaInicio}`.localeCompare(`${a.fecha} ${a.horaInicio}`)
-        )
-        .slice(0, 5);
-      setCitasRecientes(recientes);
-    } catch (err) {
-      console.error('Error al cargar dashboard:', err);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    setDashboardData(dashData);
+
+    const recientes = [...citas]
+      .sort((a: Cita, b: Cita) =>
+        `${b.fecha} ${b.horaInicio}`.localeCompare(
+          `${a.fecha} ${a.horaInicio}`
+        )
+      )
+      .slice(0, 5);
+
+    setCitasRecientes(recientes);
+
+  } catch (err) {
+    console.error('Error al cargar dashboard:', err);
+  } finally {
+    setLoading(false);
+  }
+};
   
 
   const getEstadoBadgeClass = (estado: string) => {
@@ -186,7 +186,7 @@ function PacienteDashboard() {
             </div>
             <button
               className="btn btn-primary btn-sm flex-shrink-0"
-              onClick={() => navigate('/paciente/mis-citas')}
+              onClick={() => navigate('/dashboard/paciente/mis-citas')}
             >
               Ver mis citas
             </button>

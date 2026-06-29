@@ -19,14 +19,31 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const userId = localStorage.getItem('userId');
-
   if (userId) {
     config.headers = config.headers ?? {};
     config.headers['x-user-id'] = userId;
   }
-
   return config;
 });
+
+/**
+ * =========================================================
+ * INTERCEPTOR: MANEJO GLOBAL DE ERRORES
+ * =========================================================
+ */
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Sesión inválida → limpiar y redirigir al login
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userData');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 /**
  * =========================================================
@@ -35,42 +52,36 @@ api.interceptors.request.use((config) => {
  */
 
 export const authService = {
-  /**
-   * Iniciar sesión
-   */
+  /** Iniciar sesión */
   login: async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
     return data;
   },
 
-  /**
-   * Obtener perfil del usuario autenticado
-   */
-  perfil: async () => {
-    const { data } = await api.get('/auth/perfil');
-    return data;
-  },
+  /** Obtener perfil del usuario autenticado (SIEMPRE desde el backend) */
+  getPerfil: async () => {
+  const { data } = await api.get('/auth/perfil');
+  return data;
+},
 
-  /**
-   * Cerrar sesión
-   */
+actualizarPerfil: async (perfilData: {
+  nombres: string;
+  apellidos: string;
+  telefono: string;
+  fechaNacimiento: string;
+}) => {
+  const { data } = await api.put('/auth/perfil', perfilData);
+  return data;
+},
+
+  /** Cerrar sesión */
   logout: async () => {
     await api.post('/auth/logout');
   },
 
-  /**
-   * Registrar nuevo usuario (NUEVO)
-   */
+  /** Registrar nuevo usuario */
   register: async (userData: any) => {
     const { data } = await api.post('/auth/register', userData);
-    return data;
-  },
-
-  /**
-   * Actualizar perfil del usuario (NUEVO)
-   */
-  actualizarPerfil: async (userData: any) => {
-    const { data } = await api.put('/auth/perfil', userData);
     return data;
   },
 };
@@ -82,93 +93,41 @@ export const authService = {
  */
 
 export const dashboardService = {
-  /**
-   * Dashboard para administradores
-   */
-  admin: async () => {
-    const { data } = await api.get('/dashboard/admin');
-    return data;
-  },
-
-  /**
-   * Dashboard para doctores
-   */
-  doctor: async () => {
-    const { data } = await api.get('/dashboard/doctor');
-    return data;
-  },
-
-  /**
-   * Dashboard para recepcionistas
-   */
-  recepcionista: async () => {
-    const { data } = await api.get('/dashboard/recepcionista');
-    return data;
-  },
-
-  /**
-   * Dashboard para pacientes
-   */
-  paciente: async () => {
-    const { data } = await api.get('/dashboard/paciente');
-    return data;
-  },
+  admin:         async () => { const { data } = await api.get('/dashboard/admin');         return data; },
+  doctor:        async () => { const { data } = await api.get('/dashboard/doctor');        return data; },
+  recepcionista: async () => { const { data } = await api.get('/dashboard/recepcionista'); return data; },
+  paciente:      async () => { const { data } = await api.get('/dashboard/paciente');      return data; },
 };
 
 /**
  * =========================================================
- * DOCTORES SERVICE (NUEVO)
+ * DOCTORES SERVICE
  * =========================================================
  */
 
 export const doctorService = {
-  /**
-   * Obtener todos los doctores
-   */
-  getAll: async () => {
-    const { data } = await api.get('/doctores');
-    return data;
-  },
-
-  /**
-   * Obtener doctor por ID
-   */
-  getById: async (id: number) => {
-    const { data } = await api.get(`/doctores/${id}`);
-    return data;
-  },
+  getAll:   async ()           => { const { data } = await api.get('/doctores');       return data; },
+  getById:  async (id: number) => { const { data } = await api.get(`/doctores/${id}`); return data; },
 };
 
 /**
  * =========================================================
- * ESPECIALIDADES SERVICE (NUEVO)
+ * ESPECIALIDADES SERVICE
  * =========================================================
  */
 
 export const especialidadService = {
-  /**
-   * Obtener todas las especialidades
-   */
-  getAll: async () => {
-    const { data } = await api.get('/especialidades');
-    return data;
-  },
+  getAll: async () => { const { data } = await api.get('/especialidades'); return data; },
 };
 
 /**
  * =========================================================
- * SEDES SERVICE (NUEVO)
+ * SEDES SERVICE
  * =========================================================
  */
 
 export const sedeService = {
-  /**
-   * Obtener todas las sedes
-   */
-  getAll: async () => {
-    const { data } = await api.get('/sedes');
-    return data;
-  },
+  getAll: async () => { const { data } = await api.get('/sedes'); return data; },
 };
 
 /**
@@ -178,117 +137,58 @@ export const sedeService = {
  */
 
 export const pacienteService = {
-  /**
-   * ===== AUTENTICACIÓN =====
-   */
 
-  /**
-   * Iniciar sesión como paciente (NUEVO)
-   */
+  /* ── Autenticación ──────────────────────────────────── */
+
   login: async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
     return data;
   },
 
-  /**
-   * Registrar nuevo paciente (NUEVO)
-   */
   register: async (userData: any) => {
     const { data } = await api.post('/auth/register', userData);
     return data;
   },
 
-  /**
-   * Cerrar sesión (NUEVO)
-   */
   logout: async () => {
     const { data } = await api.post('/auth/logout');
     return data;
   },
 
   /**
-   * Obtener perfil del paciente (NUEVO)
+   * Obtener perfil desde el backend.
+   * NUNCA usa localStorage como fuente de datos;
+   * localStorage solo se usa en MiPerfil para campos extendidos.
    */
   getPerfil: async () => {
-  const localData = localStorage.getItem('perfilPaciente');
-
-  if (localData) {
-    return JSON.parse(localData);
-  }
-
-  const { data } = await api.get('/auth/perfil');
-
-  localStorage.setItem(
-    'perfilPaciente',
-    JSON.stringify(data)
-  );
-
-  return data;
-},
-
-  /**
-   * Actualizar perfil del paciente (NUEVO)
-   */
- actualizarPerfil: async (userData: any) => {
-  localStorage.setItem(
-    'perfilPaciente',
-    JSON.stringify(userData)
-  );
-
-  return userData;
-},
-
-  /**
-   * ===== DOCTORES =====
-   */
-
-  /**
-   * Obtener doctores con especialidades (EXISTENTE)
-   */
-  getDoctores: async () => {
-    const { data } = await api.get('/doctores');
+    const { data } = await api.get('/auth/perfil');
+    return data;
+  },
+  actualizarPerfil: async (perfilData: {
+    nombres: string;
+    apellidos: string;
+    telefono: string;
+    fechaNacimiento: string;
+  }) => {
+    const { data } = await api.put('/auth/perfil', perfilData);
     return data;
   },
 
-  /**
-   * Obtener doctor por ID (NUEVO)
-   */
-  getDoctorById: async (id: number) => {
-    const { data } = await api.get(`/doctores/${id}`);
-    return data;
-  },
+  /* ── Doctores ───────────────────────────────────────── */
 
-  /**
-   * ===== ESPECIALIDADES =====
-   */
+  getDoctores:    async ()           => { const { data } = await api.get('/doctores');       return data; },
+  getDoctorById:  async (id: number) => { const { data } = await api.get(`/doctores/${id}`); return data; },
 
-  /**
-   * Obtener todas las especialidades (NUEVO)
-   */
-  getEspecialidades: async () => {
-    const { data } = await api.get('/especialidades');
-    return data;
-  },
+  /* ── Especialidades ─────────────────────────────────── */
 
-  /**
-   * ===== SEDES =====
-   */
+  getEspecialidades: async () => { const { data } = await api.get('/especialidades'); return data; },
 
-  /**
-   * Obtener todas las sedes (NUEVO)
-   */
-  getSedes: async () => {
-    const { data } = await api.get('/sedes');
-    return data;
-  },
+  /* ── Sedes ──────────────────────────────────────────── */
 
-  /**
-   * ===== HORARIOS =====
-   */
+  getSedes: async () => { const { data } = await api.get('/sedes'); return data; },
 
-  /**
-   * Obtener horarios disponibles de un doctor (EXISTENTE)
-   */
+  /* ── Horarios ───────────────────────────────────────── */
+
   getHorariosDisponibles: async (doctorId: number, fecha: string, sedeId?: number) => {
     const { data } = await api.get('/horarios-disponibles', {
       params: { doctorId, fecha, sedeId },
@@ -296,21 +196,13 @@ export const pacienteService = {
     return data;
   },
 
-  /**
-   * ===== CITAS =====
-   */
+  /* ── Citas ──────────────────────────────────────────── */
 
-  /**
-   * Obtener citas del paciente (EXISTENTE)
-   */
   getMisCitas: async () => {
     const { data } = await api.get('/citas');
     return data;
   },
 
-  /**
-   * Crear nueva cita (EXISTENTE)
-   */
   crearCita: async (citaData: {
     pacienteId: number;
     doctorId: number;
@@ -322,95 +214,44 @@ export const pacienteService = {
     return data;
   },
 
-  /**
-   * Cancelar cita (EXISTENTE)
-   */
   cancelarCita: async (citaId: number) => {
     const { data } = await api.delete(`/citas/${citaId}`);
     return data;
   },
 
-  /**
-   * Actualizar estado de una cita (NUEVO)
-   */
   actualizarEstadoCita: async (citaId: number, estado: string) => {
     const { data } = await api.patch(`/citas/${citaId}/estado`, { estado });
     return data;
   },
 
-  /**
-   * Obtener citas del día actual (NUEVO)
-   */
   getCitasHoy: async () => {
     const { data } = await api.get('/citas/hoy');
     return data;
   },
 
-  /**
-   * ===== HISTORIAL MÉDICO =====
-   */
+  /* ── Historial médico ───────────────────────────────── */
 
-  /**
-   * Obtener historial médico del paciente (EXISTENTE)
-   */
   getMiHistorial: async () => {
-  // Primero intentar desde localStorage
-  try {
-    const stored = JSON.parse(localStorage.getItem('pacienteData') || '{}');
-    if (stored.id) {
-      const { data } = await api.get(`/pacientes/${stored.id}/historial`);
-      return data;
-    }
-  } catch { /* continúa */ }
-
-  // Si no hay pacienteData, obtener el id desde las citas
-  const citas = await api.get('/citas').then(r => r.data);
-  if (Array.isArray(citas) && citas.length > 0) {
-    const pacienteId = citas[0].pacienteId;
-    // Guardar para próximas veces
-    const userId = localStorage.getItem('userId');
-    localStorage.setItem('pacienteData', JSON.stringify({ id: pacienteId, userId }));
-    const { data } = await api.get(`/pacientes/${pacienteId}/historial`);
-    return data;
-  }
-
-  // Si no tiene citas, retornar historial vacío en lugar de lanzar error
-  return { consultas: [], paciente: null };
-},
-
-  /**
-   * ===== PACIENTES =====
-   */
-
-  /**
-   * Buscar paciente por documento (NUEVO)
-   */
-  getPacienteByDocumento: async (documento: string) => {
-    const { data } = await api.get('/pacientes/buscar', {
-      params: { documento },
-    });
+    const { data } = await api.get('/paciente/historial');
     return data;
   },
 
-  /**
-   * ===== DASHBOARD =====
-   */
+  /* ── Búsqueda de pacientes ──────────────────────────── */
 
-  /**
-   * Obtener datos del dashboard del paciente (EXISTENTE)
-   */
+  getPacienteByDocumento: async (documento: string) => {
+    const { data } = await api.get('/pacientes/buscar', { params: { documento } });
+    return data;
+  },
+
+  /* ── Dashboard ──────────────────────────────────────── */
+
   getDashboardData: async () => {
     const { data } = await api.get('/dashboard/paciente');
     return data;
   },
 
-  /**
-   * ===== PAGOS =====
-   */
+  /* ── Pagos ──────────────────────────────────────────── */
 
-  /**
-   * Registrar un pago (NUEVO)
-   */
   registrarPago: async (pagoData: {
     citaId: number;
     metodoPago: string;
@@ -420,13 +261,8 @@ export const pacienteService = {
     return data;
   },
 
-  /**
-   * ===== CONSULTAS MÉDICAS =====
-   */
+  /* ── Consultas médicas ──────────────────────────────── */
 
-  /**
-   * Obtener consulta médica por ID de cita (NUEVO)
-   */
   getConsultaByCita: async (citaId: number) => {
     const { data } = await api.get(`/consultas/cita/${citaId}`);
     return data;
@@ -435,7 +271,7 @@ export const pacienteService = {
 
 /**
  * =========================================================
- * EXPORT DEFAULT (INSTANCIA AXIOS)
+ * EXPORT DEFAULT
  * =========================================================
  */
 
