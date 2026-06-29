@@ -99,15 +99,174 @@ export const dashboardService = {
   paciente:      async () => { const { data } = await api.get('/dashboard/paciente');      return data; },
 };
 
-/**
- * =========================================================
+/* =========================================================
  * DOCTORES SERVICE
  * =========================================================
  */
 
 export const doctorService = {
-  getAll:   async ()           => { const { data } = await api.get('/doctores');       return data; },
-  getById:  async (id: number) => { const { data } = await api.get(`/doctores/${id}`); return data; },
+
+  /* =======================================================
+   * DASHBOARD
+   * ======================================================= */
+
+  getDashboard: async () => {
+    const { data } = await api.get('/dashboard/doctor');
+    return data;
+  },
+
+  getEstadisticas: async () => {
+    const { data } = await api.get('/doctor/estadisticas');
+    return data;
+  },
+
+  getProximoPaciente: async () => {
+    const { data } = await api.get('/doctor/proximo-paciente');
+    return data;
+  },
+
+  /* =======================================================
+   * DOCTOR
+   * ======================================================= */
+
+  getAll: async () => {
+    const { data } = await api.get('/doctores');
+    return data;
+  },
+
+  getById: async (id: number) => {
+    const { data } = await api.get(`/doctores/${id}`);
+    return data;
+  },
+
+  getPerfil: async () => {
+    const { data } = await api.get('/auth/perfil');
+    return data;
+  },
+
+  /* =======================================================
+   * PACIENTES
+   * ======================================================= */
+
+  getPacientes: async () => {
+    const { data } = await api.get('/doctor/pacientes');
+    return data;
+  },
+
+  /* =======================================================
+   * CITAS
+   * ======================================================= */
+
+  getMisCitas: async (params?: {
+  estado?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+}) => {
+  const { data } = await api.get('/citas', {
+    params,
+  });
+
+  return data;
+},
+
+actualizarEstadoCita: async (
+  citaId: number,
+  estado:
+    | 'CONFIRMADA'
+    | 'ATENDIDA'
+    | 'CANCELADA'
+    | 'NO_ASISTIO'
+) => {
+  const { data } = await api.patch(
+    `/citas/${citaId}/estado`,
+    { estado }
+  );
+
+  return data;
+},
+
+  getCitasHoy: async () => {
+    const { data } = await api.get('/citas/hoy');
+    return data;
+  },
+
+  getAgenda: async (fecha?: string) => {
+    const { data } = await api.get('/doctor/agenda', {
+      params: fecha ? { fecha } : {},
+    });
+    return data;
+  },
+
+  cambiarEstadoCita: async (
+    citaId: number,
+    estado: 'PENDIENTE' | 'CONFIRMADA' | 'ATENDIDA' | 'CANCELADA' | 'NO_ASISTIO'
+  ) => {
+    const { data } = await api.patch(
+      `/citas/${citaId}/estado`,
+      { estado }
+    );
+
+    return data;
+  },
+
+  /* =======================================================
+   * HORARIOS
+   * ======================================================= */
+
+  crearHorario: async (horario: {
+    doctorId: number;
+    sedeId: number;
+    consultorioId: number;
+    diaSemana: number;
+    horaInicio: string;
+    horaFin: string;
+    intervaloMinutos?: number;
+  }) => {
+    const { data } = await api.post(
+      '/horarios-doctor',
+      horario
+    );
+
+    return data;
+  },
+
+  /* =======================================================
+   * CONSULTAS MÉDICAS
+   * ======================================================= */
+
+  registrarConsulta: async (consulta: {
+    citaId: number;
+    diagnostico: string;
+    tratamiento: string;
+    observaciones?: string;
+    sintomas?: string;
+    signosVitales?: any;
+  }) => {
+    const { data } = await api.post(
+      '/consultas',
+      consulta
+    );
+
+    return data;
+  },
+
+  getHistorialPaciente: async (pacienteId: number) => {
+    const { data } = await api.get(
+      `/pacientes/${pacienteId}/historial`
+    );
+
+    return data;
+  },
+
+  /* =======================================================
+   * SESIÓN
+   * ======================================================= */
+
+  logout: async () => {
+    const { data } = await api.post('/auth/logout');
+    return data;
+  },
+
 };
 
 /**
