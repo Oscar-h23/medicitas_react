@@ -8,7 +8,7 @@ import LoginPage from './pages/auth/LoginPage';
 
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 
-import { RecepcionistaDashboard } from './pages/dashboard/OtherDashboards';
+
 
 import PacienteLayout from './components/PacienteLayout';
 import PacienteDashboard from './pages/paciente/PacienteDashboard';
@@ -26,6 +26,14 @@ import DoctorCitas from './pages/doctor/DoctorCitas';
 import DoctorConsultas from './pages/doctor/DoctorConsultas';
 import DoctorHistoriales from './pages/doctor/DoctorHistoriales';
 import DoctorPerfil from './pages/doctor/DoctorPerfil';
+
+import RecepcionistaDashboard from './pages/recepcionista/RecepcionistaDashboard';
+import RecepcionistaLayout from './components/RecepcionistaLayout';
+
+import RecepcionistaCitas from './pages/recepcionista/RecepcionistaCitas';
+import RecepcionistaPacientes from './pages/recepcionista/RecepcionistaPacientes';
+import RecepcionistaPagos from './pages/recepcionista/RecepcionistaPagos';
+import RecepcionistaPerfil from './pages/recepcionista/RecepcionistaPerfil';
 
 import type { Rol } from './types';
 
@@ -100,14 +108,13 @@ export default function App() {
       </Route>
 
           {/* RECEPCIONISTA */}
-          <Route
-            path="/dashboard/recepcionista"
-            element={
-              <ProtectedRoute roles={['RECEPCIONISTA']}>
-                <RecepcionistaDashboard />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/dashboard/recepcionista" element={<RecepcionistaLayout />}>
+  <Route index element={<RecepcionistaDashboard />} />
+  <Route path="citas" element={<RecepcionistaCitas />} />
+  <Route path="pacientes" element={<RecepcionistaPacientes />} />
+  <Route path="pagos" element={<RecepcionistaPagos />} />
+  <Route path="mi-perfil" element={<RecepcionistaPerfil />} />
+</Route>
 
           {/* PACIENTE — layout con sidebar */}
           <Route

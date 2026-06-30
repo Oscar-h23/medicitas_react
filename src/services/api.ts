@@ -70,6 +70,16 @@ actualizarPerfil: async (perfilData: {
   apellidos: string;
   telefono: string;
   fechaNacimiento: string;
+  numeroDocumento?: string;
+  sexo?: string;
+  direccion?: string;
+  distrito?: string;
+  grupoSanguineo?: string;
+  alergias?: string;
+  contactoEmergencia?: string;
+  telefonoEmergencia?: string;
+  password?: string;
+  confirmPassword?: string;
 }) => {
   const { data } = await api.put('/auth/perfil', perfilData);
   return data;
@@ -477,6 +487,151 @@ export const pacienteService = {
 
   getConsultaByCita: async (citaId: number) => {
     const { data } = await api.get(`/consultas/cita/${citaId}`);
+    return data;
+  },
+};
+// ============================================================
+// RECEPCIONISTA SERVICE
+// ============================================================
+
+/* =========================================================
+ * RECEPCIONISTA SERVICE
+ * ========================================================= */
+
+export const recepcionistaService = {
+  // ── Dashboard ──────────────────────────────────────────────
+  getDashboard: async () => {
+    const { data } = await api.get('/dashboard/recepcionista');
+    return data;
+  },
+
+  // ── Citas ──────────────────────────────────────────────────
+  getCitasHoy: async () => {
+    const { data } = await api.get('/citas/hoy');
+    return data;
+  },
+  // ── Pagos ──────────────────────────────────────────────────
+anularPago: async (pagoId: number) => {
+  const { data } = await api.patch(`/pagos/${pagoId}/anular`);
+  return data;
+},
+
+  getCitas: async (params?: {
+    estado?: string;
+    fechaInicio?: string;
+    fechaFin?: string;
+    pacienteId?: number;
+    doctorId?: number;
+  }) => {
+    const { data } = await api.get('/citas', { params });
+    return data;
+  },
+
+  crearCita: async (citaData: {
+    pacienteId: number;
+    doctorId: number;
+    fecha: string;
+    horaInicio: string;
+    motivoConsulta: string;
+  }) => {
+    const { data } = await api.post('/citas', citaData);
+    return data;
+  },
+
+  cambiarEstadoCita: async (citaId: number, estado: string) => {
+    const { data } = await api.patch(`/citas/${citaId}/estado`, { estado });
+    return data;
+  },
+
+  getDetalleCita: async (citaId: number) => {
+    const { data } = await api.get(`/citas/${citaId}`);
+    return data;
+  },
+
+  // ── Pacientes ──────────────────────────────────────────────
+  getPacientes: async () => {
+    const { data } = await api.get('/pacientes');
+    return data;
+  },
+
+  buscarPacientePorDocumento: async (documento: string) => {
+    const { data } = await api.get('/pacientes/buscar', { params: { documento } });
+    return data;
+  },
+
+  crearPaciente: async (pacienteData: {
+    nombres: string;
+    apellidos: string;
+    email: string;
+    password?: string;
+    numeroDocumento: string;
+    telefono?: string;
+    fechaNacimiento?: string;
+    seguroId?: number;
+  }) => {
+    const { data } = await api.post('/pacientes', pacienteData);
+    return data;
+  },
+
+  // ── Pagos ──────────────────────────────────────────────────
+  registrarPago: async (pagoData: {
+    citaId: number;
+    metodoPago: string;
+    numeroOperacion?: string;
+  }) => {
+    const { data } = await api.post('/pagos', pagoData);
+    return data;
+  },
+
+  getPagos: async () => {
+    // Si no existe un endpoint específico, puedes filtrar citas pagadas
+    const { data } = await api.get('/citas', { params: { estado: 'ATENDIDA' } });
+    return data;
+  },
+
+  // ── Doctores ───────────────────────────────────────────────
+  getDoctores: async () => {
+    const { data } = await api.get('/doctores');
+    return data;
+  },
+
+  // ── Especialidades ──────────────────────────────────────────
+  getEspecialidades: async () => {
+    const { data } = await api.get('/especialidades');
+    return data;
+  },
+
+  // ── Perfil ─────────────────────────────────────────────────
+  getPerfil: async () => {
+    const { data } = await api.get('/auth/perfil');
+    return data;
+  },
+  // ── Perfil ──────────────────────────────────────────────────
+  getPerfilCompleto: async () => {
+    // Similar a doctor, pero necesitamos un endpoint para recepcionista, aunque podemos reutilizar /auth/perfil
+    // Si no existe, puedes extender el backend o usar /auth/perfil que da datos básicos.
+    const { data } = await api.get('/auth/perfil');
+    return data;
+  },
+  listarPacientes: async () => {
+    const { data } = await api.get('/pacientes');
+    return data;
+  },
+  // ── Horarios ──────────────────────────────────────────────
+getHorariosDisponibles: async (doctorId: number, fecha: string) => {
+  const { data } = await api.get('/horarios-disponibles', {
+    params: { doctorId, fecha },
+  });
+  return data.horariosDisponibles; // array de strings "HH:MM"
+},
+
+  actualizarPerfil: async (perfilData: {
+    nombres: string;
+    apellidos: string;
+    email: string;
+    telefono: string;
+  }) => {
+    const { data } = await api.put('/auth/perfil', perfilData);
     return data;
   },
 };
