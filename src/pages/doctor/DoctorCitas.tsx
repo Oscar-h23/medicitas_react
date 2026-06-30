@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { doctorService } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 function DoctorMisCitas() {
 
@@ -8,6 +9,8 @@ function DoctorMisCitas() {
 
   const [estado, setEstado] = useState('');
   const [fecha, setFecha] = useState('');
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     cargarCitas();
@@ -311,16 +314,13 @@ function DoctorMisCitas() {
 
                           <>
                             <button
-                              className="btn btn-success btn-sm me-2"
-                              onClick={() =>
-                                cambiarEstado(
-                                  cita.id,
-                                  'ATENDIDA'
-                                )
-                              }
-                            >
-                              Atender
-                            </button>
+                                    className="btn btn-success btn-sm me-2"
+                                    onClick={() =>
+                                        navigate(`/doctor/consultas/${cita.id}`)
+                                    }
+                                    >
+                                    Atender
+                                    </button>
 
                             <button
                               className="btn btn-dark btn-sm me-2"

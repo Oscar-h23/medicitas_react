@@ -51,6 +51,7 @@ api.interceptors.response.use(
  * =========================================================
  */
 
+
 export const authService = {
   /** Iniciar sesión */
   login: async (email: string, password: string) => {
@@ -99,6 +100,7 @@ export const dashboardService = {
   paciente:      async () => { const { data } = await api.get('/dashboard/paciente');      return data; },
 };
 
+
 /* =========================================================
  * DOCTORES SERVICE
  * =========================================================
@@ -124,6 +126,15 @@ export const doctorService = {
     const { data } = await api.get('/doctor/proximo-paciente');
     return data;
   },
+  getHistoriales: async (params?: {
+  pacienteId?: number;
+  doctorId?: number;
+  fechaInicio?: string;
+  fechaFin?: string;
+}) => {
+  const { data } = await api.get('/historiales', { params });
+  return data;
+},
 
   /* =======================================================
    * DOCTOR
@@ -143,6 +154,60 @@ export const doctorService = {
     const { data } = await api.get('/auth/perfil');
     return data;
   },
+  getPerfilCompleto: async () => {
+  const { data } = await api.get('/doctor/perfil');
+  return data;
+},
+
+actualizarPerfil: async (perfilData: {
+  nombres: string;
+  apellidos: string;
+  email: string;
+  telefono: string;
+  especialidadId: number;
+  precioConsulta: number;
+  foto?: string;
+  password?: string;
+  confirmPassword?: string;
+}) => {
+  const { data } = await api.put('/doctor/perfil', perfilData);
+  return data;
+},
+
+
+  registrarConsulta: async (consulta: {
+  citaId: number;
+  diagnostico: string;
+  tratamiento: string;
+  observaciones: string;
+  sintomas: string;
+  signosVitales: any;
+}) => {
+  const { data } = await api.post('/consultas', consulta);
+  return data;
+},
+getDetalleCita: async (id: number) => {
+  const { data } = await api.get(`/citas/${id}`);
+  return data;
+},
+atenderPaciente: async (
+  citaId: number,
+  consulta: {
+    diagnostico: string;
+    tratamiento: string;
+    observaciones: string;
+    sintomas?: string;
+    signosVitales?: any;
+  }
+) => {
+  const { data } = await api.post('/consultas', {
+    citaId,
+    ...consulta,
+  });
+
+  return data;
+},
+
 
   /* =======================================================
    * PACIENTES
@@ -168,6 +233,7 @@ export const doctorService = {
 
   return data;
 },
+
 
 actualizarEstadoCita: async (
   citaId: number,
@@ -234,21 +300,7 @@ actualizarEstadoCita: async (
    * CONSULTAS MÉDICAS
    * ======================================================= */
 
-  registrarConsulta: async (consulta: {
-    citaId: number;
-    diagnostico: string;
-    tratamiento: string;
-    observaciones?: string;
-    sintomas?: string;
-    signosVitales?: any;
-  }) => {
-    const { data } = await api.post(
-      '/consultas',
-      consulta
-    );
-
-    return data;
-  },
+  
 
   getHistorialPaciente: async (pacienteId: number) => {
     const { data } = await api.get(
@@ -419,6 +471,7 @@ export const pacienteService = {
     const { data } = await api.post('/pagos', pagoData);
     return data;
   },
+ 
 
   /* ── Consultas médicas ──────────────────────────────── */
 
@@ -427,6 +480,8 @@ export const pacienteService = {
     return data;
   },
 };
+
+
 
 /**
  * =========================================================
