@@ -5,10 +5,9 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import LoginPage from './pages/auth/LoginPage';
+import HomePage from './pages/public/HomePage'; // ← NUEVA IMPORTACIÓN
 
 import AdminDashboard from './pages/dashboard/AdminDashboard';
-
-
 
 import PacienteLayout from './components/PacienteLayout';
 import PacienteDashboard from './pages/paciente/PacienteDashboard';
@@ -20,16 +19,14 @@ import AgendarCita from './pages/paciente/AgendarCita';
 import MisCitas from './pages/paciente/MisCitas';
 
 import DoctorLayout from './components/DoctorLayout';
-
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
 import DoctorCitas from './pages/doctor/DoctorCitas';
 import DoctorConsultas from './pages/doctor/DoctorConsultas';
 import DoctorHistoriales from './pages/doctor/DoctorHistoriales';
 import DoctorPerfil from './pages/doctor/DoctorPerfil';
 
-import RecepcionistaDashboard from './pages/recepcionista/RecepcionistaDashboard';
 import RecepcionistaLayout from './components/RecepcionistaLayout';
-
+import RecepcionistaDashboard from './pages/recepcionista/RecepcionistaDashboard';
 import RecepcionistaCitas from './pages/recepcionista/RecepcionistaCitas';
 import RecepcionistaPacientes from './pages/recepcionista/RecepcionistaPacientes';
 import RecepcionistaPagos from './pages/recepcionista/RecepcionistaPagos';
@@ -63,6 +60,8 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* 🔓 RUTA PÚBLICA – landing page */}
+          <Route path="/" element={<HomePage />} />
 
           {/* LOGIN */}
           <Route path="/login" element={<LoginPage />} />
@@ -89,34 +88,30 @@ export default function App() {
 
           {/* DOCTOR */}
           <Route
-  path="/dashboard/doctor"
-  element={
-    <ProtectedRoute roles={['DOCTOR']}>
-      <DoctorLayout />
-    </ProtectedRoute>
-  }
-      >
-        <Route index element={<DoctorDashboard />} />
-
-        <Route path="citas" element={<DoctorCitas />} />
-
-        <Route path="consultas" element={<DoctorConsultas />} />
-
-        <Route path="historiales" element={<DoctorHistoriales />} />
-
-        <Route path="mi-perfil" element={<DoctorPerfil />} />
-      </Route>
+            path="/dashboard/doctor"
+            element={
+              <ProtectedRoute roles={['DOCTOR']}>
+                <DoctorLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<DoctorDashboard />} />
+            <Route path="citas" element={<DoctorCitas />} />
+            <Route path="consultas" element={<DoctorConsultas />} />
+            <Route path="historiales" element={<DoctorHistoriales />} />
+            <Route path="mi-perfil" element={<DoctorPerfil />} />
+          </Route>
 
           {/* RECEPCIONISTA */}
           <Route path="/dashboard/recepcionista" element={<RecepcionistaLayout />}>
-  <Route index element={<RecepcionistaDashboard />} />
-  <Route path="citas" element={<RecepcionistaCitas />} />
-  <Route path="pacientes" element={<RecepcionistaPacientes />} />
-  <Route path="pagos" element={<RecepcionistaPagos />} />
-  <Route path="mi-perfil" element={<RecepcionistaPerfil />} />
-</Route>
+            <Route index element={<RecepcionistaDashboard />} />
+            <Route path="citas" element={<RecepcionistaCitas />} />
+            <Route path="pacientes" element={<RecepcionistaPacientes />} />
+            <Route path="pagos" element={<RecepcionistaPagos />} />
+            <Route path="mi-perfil" element={<RecepcionistaPerfil />} />
+          </Route>
 
-          {/* PACIENTE — layout con sidebar */}
+          {/* PACIENTE */}
           <Route
             path="/dashboard/paciente"
             element={
@@ -127,7 +122,6 @@ export default function App() {
           >
             <Route index element={<PacienteDashboard />} />
             <Route path="doctores" element={<Doctores />} />
-            {/* ← RUTA NUEVA */}
             <Route path="doctor-perfil/:doctorId" element={<DoctorPerfilPaciente />} />
             <Route path="mi-historial" element={<MiHistorial />} />
             <Route path="mi-perfil" element={<MiPerfil />} />
@@ -135,9 +129,8 @@ export default function App() {
             <Route path="agendar-cita/:doctorId" element={<AgendarCita />} />
           </Route>
 
-          {/* FALLBACK */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-
+          {/* FALLBACK: si no coincide ninguna ruta, redirige al home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
