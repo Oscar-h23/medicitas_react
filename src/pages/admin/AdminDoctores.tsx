@@ -34,6 +34,7 @@ function AdminDoctores() {
     precioConsulta: 0,
     telefono: '',
     foto: '',
+    numeroDocumento: '', // ← NUEVO CAMPO
   });
 
   useEffect(() => {
@@ -68,12 +69,33 @@ function AdminDoctores() {
         });
         alert('✅ Doctor actualizado');
       } else {
-        await adminService.crearDoctor(formData);
+        // 🔥 Enviar todos los datos incluyendo numeroDocumento
+        await adminService.crearDoctor({
+          nombres: formData.nombres,
+          apellidos: formData.apellidos,
+          email: formData.email,
+          cmp: formData.cmp,
+          especialidadId: formData.especialidadId,
+          precioConsulta: formData.precioConsulta,
+          telefono: formData.telefono,
+          foto: formData.foto,
+          numeroDocumento: formData.numeroDocumento,
+        });
         alert('✅ Doctor creado');
       }
       setMostrarModal(false);
       setEditando(null);
-      setFormData({ nombres: '', apellidos: '', email: '', cmp: '', especialidadId: 0, precioConsulta: 0, telefono: '', foto: '' });
+      setFormData({
+        nombres: '',
+        apellidos: '',
+        email: '',
+        cmp: '',
+        especialidadId: 0,
+        precioConsulta: 0,
+        telefono: '',
+        foto: '',
+        numeroDocumento: '',
+      });
       cargarDatos();
     } catch (err: any) {
       alert(err?.response?.data?.mensaje || 'Error al guardar doctor.');
@@ -136,12 +158,13 @@ function AdminDoctores() {
                           setFormData({
                             nombres: d.nombre.split(' ')[0] || '',
                             apellidos: d.nombre.split(' ').slice(1).join(' ') || '',
-                            email: '',
+                            email: '', // no editable
                             cmp: d.cmp,
                             especialidadId: d.especialidadId,
                             precioConsulta: d.precioConsulta,
                             telefono: '',
                             foto: d.foto || '',
+                            numeroDocumento: '', // no disponible en la lista
                           });
                           setMostrarModal(true);
                         }}
@@ -195,7 +218,8 @@ function AdminDoctores() {
                         required
                       />
                     </div>
-                    {!editando && (
+
+                    {!editando ? (
                       <>
                         <div className="col-md-6">
                           <label className="form-label">Email *</label>
@@ -217,8 +241,38 @@ function AdminDoctores() {
                             required
                           />
                         </div>
+                        {/* 🔥 CAMPO DNI (solo en creación) */}
+                        <div className="col-md-6">
+                          <label className="form-label">DNI *</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={formData.numeroDocumento}
+                            onChange={(e) => setFormData({ ...formData, numeroDocumento: e.target.value })}
+                            required
+                            maxLength={8}
+                            pattern="[0-9]{8}"
+                            placeholder="12345678"
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">Teléfono</label>
+                          <input
+                            type="tel"
+                            className="form-control"
+                            value={formData.telefono}
+                            onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                          />
+                        </div>
                       </>
+                    ) : (
+                      // Modo edición: mostramos los campos que no se pueden editar como solo lectura
+                      <div className="col-md-6">
+                        <label className="form-label">CMP</label>
+                        <input type="text" className="form-control" value={formData.cmp} disabled />
+                      </div>
                     )}
+
                     <div className="col-md-6">
                       <label className="form-label">Especialidad *</label>
                       <select
@@ -245,17 +299,7 @@ function AdminDoctores() {
                         required
                       />
                     </div>
-                    {!editando && (
-                      <div className="col-md-12">
-                        <label className="form-label">Teléfono</label>
-                        <input
-                          type="tel"
-                          className="form-control"
-                          value={formData.telefono}
-                          onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                        />
-                      </div>
-                    )}
+
                     <div className="col-md-12">
                       <label className="form-label">Foto (URL)</label>
                       <input

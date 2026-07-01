@@ -2,11 +2,6 @@
 import { useEffect, useState } from 'react';
 import { adminService } from '../../services/api';
 
-
-/* ======================================================
-   TIPOS
-   ====================================================== */
-
 interface PerfilData {
   id: number;
   email: string;
@@ -19,13 +14,8 @@ interface PerfilData {
   sexo: string;
   direccion: string;
   distrito: string;
-  grupoSanguineo: string;
-  alergias: string;
-  contactoEmergencia: string;
-  telefonoEmergencia: string;
 }
 
-// Valores por defecto
 const DEFAULT_PERFIL: PerfilData = {
   id: 0,
   email: '',
@@ -38,20 +28,9 @@ const DEFAULT_PERFIL: PerfilData = {
   sexo: '',
   direccion: '',
   distrito: '',
-  grupoSanguineo: '',
-  alergias: '',
-  contactoEmergencia: '',
-  telefonoEmergencia: '',
 };
 
-/* ======================================================
-   COMPONENTE
-   ====================================================== */
-
 function AdminPerfil() {
-  // Eliminamos 'usuario' porque no se usa
-  // const { usuario } = useAuth(); ← ELIMINADO
-
   const [perfil, setPerfil] = useState<PerfilData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,14 +46,10 @@ function AdminPerfil() {
     cargarPerfil();
   }, []);
 
-  /* ────────────────────────────────────────────────────
-     1. CARGAR perfil (todo desde el backend)
-     ──────────────────────────────────────────────────── */
   const cargarPerfil = async () => {
     setLoading(true);
     setError(null);
     try {
-      // ✅ Usamos adminService.getPerfil() que debe existir
       const data = await adminService.getPerfil();
       const perfilCompleto: PerfilData = {
         ...DEFAULT_PERFIL,
@@ -92,14 +67,10 @@ function AdminPerfil() {
     }
   };
 
-  /* ────────────────────────────────────────────────────
-     2. GUARDAR (todo al backend)
-     ──────────────────────────────────────────────────── */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!perfil || !formData) return;
 
-    // Validar contraseña si se proporcionó
     if (password || confirmPassword) {
       if (password.length < 6) {
         alert('La contraseña debe tener al menos 6 caracteres.');
@@ -123,10 +94,6 @@ function AdminPerfil() {
         sexo: formData.sexo,
         direccion: formData.direccion,
         distrito: formData.distrito,
-        grupoSanguineo: formData.grupoSanguineo,
-        alergias: formData.alergias,
-        contactoEmergencia: formData.contactoEmergencia,
-        telefonoEmergencia: formData.telefonoEmergencia,
       };
 
       if (password) {
@@ -134,7 +101,6 @@ function AdminPerfil() {
         payload.confirmPassword = confirmPassword;
       }
 
-      // ✅ Usamos adminService.actualizarPerfil() que debe existir
       const respuesta = await adminService.actualizarPerfil(payload);
 
       const perfilActualizado: PerfilData = {
@@ -170,14 +136,10 @@ function AdminPerfil() {
     setConfirmPassword('');
   };
 
-  /* ────────────────────────────────────────────────────
-     RENDER
-     ──────────────────────────────────────────────────── */
-
   if (loading) {
     return (
       <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status" />
+        <div className="spinner-border text-primary" />
         <p className="mt-2 text-muted">Cargando perfil...</p>
       </div>
     );
@@ -215,16 +177,11 @@ function AdminPerfil() {
     },
     { label: 'Dirección', value: perfil.direccion || 'No registrada' },
     { label: 'Distrito', value: perfil.distrito || 'No registrado' },
-    { label: 'Grupo sanguíneo', value: perfil.grupoSanguineo || 'No registrado' },
-    { label: 'Alergias', value: perfil.alergias || 'Ninguna' },
-    { label: 'Contacto emergencia', value: perfil.contactoEmergencia || 'No registrado' },
-    { label: 'Teléfono emergencia', value: perfil.telefonoEmergencia || 'No registrado' },
   ];
 
   return (
     <div className="row justify-content-center">
       <div className="col-lg-8">
-        {/* ── Tarjeta principal ─────────────────────── */}
         <div className="card shadow border-0 mb-4">
           <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 className="mb-0">👤 Mi perfil</h5>
@@ -237,10 +194,8 @@ function AdminPerfil() {
 
           <div className="card-body">
             {editando ? (
-              /* ── Formulario de edición ─────────────── */
               <form onSubmit={handleSubmit}>
                 <div className="row g-3">
-                  {/* Sección: datos personales */}
                   <div className="col-12">
                     <span className="badge bg-primary-subtle text-primary-emphasis">
                       📡 Datos personales
@@ -269,6 +224,7 @@ function AdminPerfil() {
                       required
                     />
                   </div>
+
                   <div className="col-md-6">
                     <label className="form-label">Email</label>
                     <input
@@ -289,6 +245,7 @@ function AdminPerfil() {
                       onChange={handleChange}
                     />
                   </div>
+
                   <div className="col-md-6">
                     <label className="form-label">Fecha de nacimiento</label>
                     <input
@@ -310,6 +267,7 @@ function AdminPerfil() {
                       maxLength={8}
                     />
                   </div>
+
                   <div className="col-md-6">
                     <label className="form-label">Sexo</label>
                     <select
@@ -324,7 +282,28 @@ function AdminPerfil() {
                     </select>
                   </div>
 
-                  {/* 🔥 SECCIÓN: Cambiar Contraseña */}
+                  <div className="col-12">
+                    <label className="form-label">Dirección</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="direccion"
+                      value={formData.direccion || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Distrito</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="distrito"
+                      value={formData.distrito || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  {/* SECCIÓN CAMBIAR CONTRASEÑA */}
                   <div className="col-12 mt-3">
                     <hr />
                     <span className="badge bg-warning text-dark">
@@ -357,82 +336,6 @@ function AdminPerfil() {
                       minLength={6}
                     />
                   </div>
-
-                  {/* Sección: información adicional */}
-                  <div className="col-12 mt-2">
-                    <hr />
-                    <span className="badge bg-secondary-subtle text-secondary-emphasis">
-                      📋 Información adicional
-                    </span>
-                  </div>
-
-                  <div className="col-12">
-                    <label className="form-label">Dirección</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="direccion"
-                      value={formData.direccion || ''}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Distrito</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="distrito"
-                      value={formData.distrito || ''}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Grupo sanguíneo</label>
-                    <select
-                      className="form-select"
-                      name="grupoSanguineo"
-                      value={formData.grupoSanguineo || ''}
-                      onChange={handleChange}
-                    >
-                      <option value="">Seleccionar</option>
-                      {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((g) => (
-                        <option key={g} value={g}>
-                          {g}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label">Alergias</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="alergias"
-                      value={formData.alergias || ''}
-                      onChange={handleChange}
-                      placeholder="Ej: Penicilina, Polen..."
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Contacto de emergencia</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="contactoEmergencia"
-                      value={formData.contactoEmergencia || ''}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label">Teléfono de emergencia</label>
-                    <input
-                      type="tel"
-                      className="form-control"
-                      name="telefonoEmergencia"
-                      value={formData.telefonoEmergencia || ''}
-                      onChange={handleChange}
-                    />
-                  </div>
                 </div>
 
                 <div className="d-flex gap-2 mt-4">
@@ -456,7 +359,6 @@ function AdminPerfil() {
                 </div>
               </form>
             ) : (
-              /* ── Vista de solo lectura ─────────────── */
               <div className="row g-3">
                 {camposVista.map(({ label, value }) => (
                   <div className="col-md-6" key={label}>
