@@ -7,7 +7,16 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/auth/LoginPage';
 import HomePage from './pages/public/HomePage'; // ← NUEVA IMPORTACIÓN
 
-import AdminDashboard from './pages/dashboard/AdminDashboard';
+
+
+import AdminLayout from './components/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsuarios from './pages/admin/AdminUsuarios';
+import AdminDoctores from './pages/admin/AdminDoctores';
+import AdminPacientes from './pages/admin/AdminPacientes';
+import AdminAuditoria from './pages/admin/AdminAuditoria';
+import AdminPerfil from './pages/admin/AdminPerfil';
+
 
 import PacienteLayout from './components/PacienteLayout';
 import PacienteDashboard from './pages/paciente/PacienteDashboard';
@@ -81,10 +90,17 @@ export default function App() {
             path="/dashboard/admin"
             element={
               <ProtectedRoute roles={['ADMIN']}>
-                <AdminDashboard />
+                <AdminLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="usuarios" element={<AdminUsuarios />} />
+            <Route path="doctores" element={<AdminDoctores />} />
+            <Route path="pacientes" element={<AdminPacientes />} />
+            <Route path="auditoria" element={<AdminAuditoria />} />
+            <Route path="mi-perfil" element={<AdminPerfil />} />
+          </Route>
 
           {/* DOCTOR */}
           <Route

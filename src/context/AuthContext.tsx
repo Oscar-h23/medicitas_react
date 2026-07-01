@@ -53,10 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: user.id,
       email: user.email,
       rol: user.rol,
-      // Datos del backend (prioridad)
       nombres: user.nombres || '',
       apellidos: user.apellidos || '',
-      // Si hay caché, mantener esos datos también
       ...perfilExistente,
     };
 
@@ -86,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(cacheKey, JSON.stringify(nuevoPerfil));
     }
 
+    // ─── OBTENER PACIENTE ID (solo si es PACIENTE) ────────────────
     if (user.rol === 'PACIENTE') {
       try {
         const res = await fetch('http://localhost:3000/api/citas', {
@@ -95,30 +94,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
         const citas = await res.json();
-
         const pacienteId = Array.isArray(citas) && citas.length > 0
           ? citas[0].pacienteId
           : null;
 
-        localStorage.setItem(
-          'pacienteData',
-          JSON.stringify({ id: pacienteId, userId: user.id })
-        );
+        // Guardar pacienteData en localStorage (como hacías antes)
+        localStorage.setItem('pacienteData', JSON.stringify({ id: pacienteId, userId: user.id }));
+
+        // 🔥 NUEVO: Actualizar userData con pacienteId
+        const userDataActual = JSON.parse(localStorage.getItem('userData') || '{}');
+        userDataActual.pacienteId = pacienteId;
+        localStorage.setItem('userData', JSON.stringify(userDataActual));
+
+        // Actualizar el estado del usuario con pacienteId
+        setUsuario((prev) => {
+          if (prev) {
+            return { ...prev, pacienteId };
+          }
+          return prev;
+        });
       } catch {
-        localStorage.setItem(
-          'pacienteData',
-          JSON.stringify({ id: null, userId: user.id })
-        );
+        localStorage.setItem('pacienteData', JSON.stringify({ id: null, userId: user.id }));
       }
     }
   };
 
   const logout = () => {
-    // SOLO BORRAR DATOS DE SESIÓN
     localStorage.removeItem('userId');
     localStorage.removeItem('userData');
     localStorage.removeItem('pacienteData');
-    // NO BORRAMOS perfil_* 
     setUsuario(null);
   };
 

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { pacienteService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 interface Doctor {
   id: number;
@@ -15,6 +16,7 @@ interface Doctor {
 function AgendarCita() {
   const { doctorId } = useParams();
   const navigate = useNavigate();
+  const { usuario } = useAuth();
 
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [fecha, setFecha] = useState('');
@@ -27,7 +29,7 @@ function AgendarCita() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  // ── Cargar doctor desde la lista (campo "nombre" ya viene combinado) ──
+  // ── Cargar doctor ──
   useEffect(() => {
     const cargar = async () => {
       try {
@@ -43,9 +45,9 @@ function AgendarCita() {
       }
     };
     if (doctorId) cargar();
-  }, [doctorId]);
+  }, [doctorId, navigate]);
 
-  // ── Cargar horarios cuando cambia la fecha ──
+  // ── Cargar horarios ──
   useEffect(() => {
     if (!fecha || !doctorId) return;
     const cargar = async () => {
@@ -68,16 +70,25 @@ function AgendarCita() {
     cargar();
   }, [fecha, doctorId]);
 
-  // ── Confirmar cita desde el modal ──
+  // ── Confirmar cita ──
   const confirmarCita = async () => {
     setLoading(true);
     try {
-      // Obtener pacienteId desde localStorage
-      const pacienteData = JSON.parse(localStorage.getItem('pacienteData') || '{}');
-      if (!pacienteData.id) throw new Error('No se encontró el ID del paciente');
+      // Obtener pacienteId desde el contexto (prioridad)
+      let pacienteId = usuario?.pacienteId;
+
+      // Si por alguna razón no está, intentar obtenerlo del perfil (respaldo)
+      if (!pacienteId) {
+        console.warn('⚠️ pacienteId no encontrado en usuario, obteniendo desde perfil...');
+        const perfil = await pacienteService.getPerfil();
+        pacienteId = perfil.pacienteId;
+        if (!pacienteId) {
+          throw new Error('No se encontró el ID del paciente. Inicia sesión nuevamente.');
+        }
+      }
 
       await pacienteService.crearCita({
-        pacienteId: pacienteData.id,
+        pacienteId,
         doctorId: parseInt(doctorId!),
         fecha,
         horaInicio: selectedHora,
@@ -101,7 +112,10 @@ function AgendarCita() {
 
   const formatearFecha = (f: string) =>
     new Date(f + 'T00:00:00').toLocaleDateString('es-ES', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
 
   if (cargandoDoctor) {
@@ -118,7 +132,6 @@ function AgendarCita() {
   return (
     <div className="row justify-content-center">
       <div className="col-md-8 col-lg-6">
-
         {/* Botón volver */}
         <button
           className="btn btn-link ps-0 mb-3 text-decoration-none"
@@ -140,7 +153,8 @@ function AgendarCita() {
               <h5 className="mb-0 fw-bold">{doctor.nombre}</h5>
               <span className="badge bg-info me-2">{doctor.especialidad}</span>
               <div className="text-success fw-semibold mt-1">
-                S/. {doctor.precioConsulta.toFixed(2)} <span className="text-muted fw-normal small">/ consulta</span>
+                S/. {doctor.precioConsulta.toFixed(2)}{' '}
+                <span className="text-muted fw-normal small">/ consulta</span>
               </div>
             </div>
           </div>
@@ -152,7 +166,6 @@ function AgendarCita() {
             <h5 className="mb-0">📅 Nueva cita</h5>
           </div>
           <div className="card-body">
-
             {/* Paso 1: Fecha */}
             <div className="mb-4">
               <label className="form-label fw-semibold">1. Selecciona una fecha</label>
@@ -160,7 +173,7 @@ function AgendarCita() {
                 type="date"
                 className="form-control"
                 value={fecha}
-                onChange={e => setFecha(e.target.value)}
+                onChange={(e) => setFecha(e.target.value)}
                 min={hoy}
                 max={maxFecha.toISOString().split('T')[0]}
               />
@@ -179,11 +192,13 @@ function AgendarCita() {
                   <div className="alert alert-warning py-2 mb-0">{errorHorarios}</div>
                 ) : (
                   <div className="d-flex flex-wrap gap-2">
-                    {horarios.map(hora => (
+                    {horarios.map((hora) => (
                       <button
                         key={hora}
                         type="button"
-                        className={`btn btn-sm ${selectedHora === hora ? 'btn-primary' : 'btn-outline-primary'}`}
+                        className={`btn btn-sm ${
+                          selectedHora === hora ? 'btn-primary' : 'btn-outline-primary'
+                        }`}
                         onClick={() => setSelectedHora(hora)}
                       >
                         {hora}
@@ -202,7 +217,7 @@ function AgendarCita() {
                   className="form-control"
                   rows={3}
                   value={motivo}
-                  onChange={e => setMotivo(e.target.value)}
+                  onChange={(e) => setMotivo(e.target.value)}
                   placeholder="Describe brevemente el motivo de tu consulta..."
                 />
               </div>
@@ -224,18 +239,16 @@ function AgendarCita() {
                 Cancelar
               </button>
             </div>
-
           </div>
         </div>
       </div>
 
-      {/* ── MODAL DE CONFIRMACIÓN ── */}
+      {/* ─── MODAL DE CONFIRMACIÓN ─── */}
       {showModal && (
         <>
           <div className="modal fade show d-block" tabIndex={-1} role="dialog">
             <div className="modal-dialog modal-dialog-centered" role="document">
               <div className="modal-content border-0 shadow-lg">
-
                 <div className="modal-header bg-primary text-white">
                   <h5 className="modal-title">✅ Confirmar cita</h5>
                   <button
@@ -293,20 +306,21 @@ function AgendarCita() {
                     disabled={loading}
                   >
                     {loading ? (
-                      <><span className="spinner-border spinner-border-sm me-2" />Agendando...</>
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" />
+                        Agendando...
+                      </>
                     ) : (
                       '✅ Confirmar cita'
                     )}
                   </button>
                 </div>
-
               </div>
             </div>
           </div>
           <div className="modal-backdrop fade show" onClick={() => !loading && setShowModal(false)} />
         </>
       )}
-
     </div>
   );
 }

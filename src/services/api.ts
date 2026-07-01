@@ -650,6 +650,96 @@ export const recepcionistaService = {
     return data;
   },
 };
+// =========================================================
+// SERVICIO DE ADMINISTRADOR (adminService)
+// =========================================================
+
+export const adminService = {
+  // ─── Dashboard ──────────────────────────────────────────────
+  getDashboard: async () => {
+    const { data } = await api.get('/dashboard/admin');
+    return data;
+  },
+
+  // ─── Usuarios ──────────────────────────────────────────────
+  getUsuarios: async () => {
+    const { data } = await api.get('/usuarios');
+    return data;
+  },
+
+  actualizarUsuario: async (usuarioId: number, payload: { activo: boolean }) => {
+    const { data } = await api.patch(`/usuarios/${usuarioId}`, payload);
+    return data;
+  },
+
+  // ─── Doctores ──────────────────────────────────────────────
+  getDoctores: async () => {
+    const { data } = await api.get('/doctores');
+    return data;
+  },
+
+  crearDoctor: async (doctorData: {
+    nombres: string;
+    apellidos: string;
+    email: string;
+    cmp: string;
+    especialidadId: number;
+    precioConsulta: number;
+    telefono?: string;
+    foto?: string;
+  }) => {
+    const { data } = await api.post('/doctores', doctorData);
+    return data;
+  },
+
+  actualizarDoctor: async (doctorId: number, payload: {
+    precioConsulta?: number;
+    especialidadId?: number;
+    activo?: boolean;
+    foto?: string;
+  }) => {
+    const { data } = await api.put(`/doctores/${doctorId}`, payload);
+    return data;
+  },
+
+  // ─── Pacientes ──────────────────────────────────────────────
+  getPacientes: async () => {
+    const { data } = await api.get('/pacientes');
+    return data;
+  },
+
+  // ─── Auditoría ──────────────────────────────────────────────
+  getAuditoria: async (params?: { limite?: number; desde?: number }) => {
+    const { data } = await api.get('/auditoria', { params });
+    return data;
+  },
+
+  // ─── Estadísticas ──────────────────────────────────────────
+  getCitasPorMes: async (params?: { anio?: number; doctorId?: number }) => {
+    const { data } = await api.get('/estadisticas/citas-por-mes', { params });
+    return data;
+  },
+  getPerfil: async () => {
+    const { data } = await api.get('/auth/perfil');
+    return data;
+  },
+
+  actualizarPerfil: async (perfilData: any) => {
+    const { data } = await api.put('/auth/perfil', perfilData);
+    return data;
+  },
+  getCitasFiltrar: async (params: any) => {
+  const { data } = await api.get('/citas/filtrar', { params });
+  return data;
+},
+
+
+  // ─── Especialidades ──────────────────────────────────────────
+  getEspecialidades: async () => {
+    const { data } = await api.get('/especialidades');
+    return data;
+  },
+};
 
 /* =========================================================
    EXPORT DEFAULT (opcional, para casos de uso general)
